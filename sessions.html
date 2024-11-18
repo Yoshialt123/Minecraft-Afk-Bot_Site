@@ -1,65 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Active Sessions</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Active Sessions</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Minecraft Bedrock AFK Bot Manager</h1>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="sessions.html" class="active">Active Sessions</a>
-        </nav>
-    </header>
-
-    <main>
-        <h2>Active Bot Sessions</h2>
-        <table id="bot-sessions-table">
-            <thead>
-                <tr>
-                    <th>Server Name</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Bot sessions will be dynamically inserted here -->
-            </tbody>
-        </table>
-    </main>
-
-    <script>
-        async function fetchBotSessions() {
-            try {
-                const response = await fetch('/bot-status');
-                const botStatus = await response.json();
-
-                const tableBody = document.getElementById('bot-sessions-table').querySelector('tbody');
-                tableBody.innerHTML = ''; // Clear existing rows
-
-                if (botStatus.length === 0) {
-                    const emptyRow = document.createElement('tr');
-                    emptyRow.innerHTML = `<td colspan="2">No active bots found</td>`;
-                    tableBody.appendChild(emptyRow);
-                } else {
-                    botStatus.forEach(({ serverName, connected }) => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${serverName}</td>
-                            <td>${connected ? 'Connected' : 'Disconnected'}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching bot sessions:', error);
-            }
-        }
-
-        // Fetch bot sessions on page load
-        fetchBotSessions();
-    </script>
+  <header>
+    <h1>Active Bot Sessions</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="sessions.html" class="active">Active Sessions</a>
+    </nav>
+  </header>
+  <main>
+    <table>
+      <thead>
+        <tr>
+          <th>Server Name</th>
+          <th>Username</th>
+        </tr>
+      </thead>
+      <tbody id="sessions-table">
+        <!-- Active sessions will be loaded here -->
+      </tbody>
+    </table>
+  </main>
+  <script>
+    async function loadSessions() {
+      try {
+        const response = await fetch('/active-sessions');
+        const sessions = await response.json();
+        const tableBody = document.getElementById('sessions-table');
+        tableBody.innerHTML = '';
+        sessions.forEach((session) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${session.serverName}</td><td>${session.username}</td>`;
+          tableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error loading sessions:', error);
+      }
+    }
+    // Load sessions on page load
+    loadSessions();
+  </script>
 </body>
 </html>
