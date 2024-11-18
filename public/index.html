@@ -1,1 +1,101 @@
-ns
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft AFK Bot Manager</title>
+</head>
+<body>
+    <h1>Minecraft AFK Bot Manager</h1>
+
+    <h2>Start a Bot</h2>
+    <form id="start-bot-form">
+        <label>Server Name: <input type="text" name="serverName" required></label><br>
+        <label>Server IP: <input type="text" name="serverIP" required></label><br>
+        <label>Server Port: <input type="number" name="serverPort" required></label><br>
+        <label>Password: <input type="password" name="password" required></label><br>
+        <button type="submit">Start Bot</button>
+    </form>
+
+    <h2>Stop a Bot</h2>
+    <form id="stop-bot-form">
+        <label>Server Name: <input type="text" name="serverName" required></label><br>
+        <label>Password: <input type="password" name="password" required></label><br>
+        <button type="submit">Stop Bot</button>
+    </form>
+
+    <h2>Active Bot Sessions</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Server Name</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="bot-status">
+            <!-- Bot sessions will be dynamically inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        const startForm = document.getElementById('start-bot-form');
+        const stopForm = document.getElementById('stop-bot-form');
+        const botStatus = document.getElementById('bot-status');
+
+        async function fetchBotStatus() {
+            try {
+                const response = await fetch('/status');
+                const bots = await response.json();
+
+                botStatus.innerHTML = bots.map(bot => `
+                    <tr>
+                        <td>${bot.serverName}</td>
+                        <td>${bot.connected ? 'Connected' : 'Disconnected'}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error fetching bot status:', error);
+            }
+        }
+
+        startForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(startForm);
+
+            try {
+                await fetch('/start-bot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(Object.fromEntries(formData.entries()))
+                });
+
+                startForm.reset();
+                fetchBotStatus();
+            } catch (error) {
+                console.error('Error starting bot:', error);
+            }
+        });
+
+        stopForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(stopForm);
+
+            try {
+                await fetch('/stop-bot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(Object.fromEntries(formData.entries()))
+                });
+
+                stopForm.reset();
+                fetchBotStatus();
+            } catch (error) {
+                console.error('Error stopping bot:', error);
+            }
+        });
+
+        setInterval(fetchBotStatus, 5000);
+        fetchBotStatus();
+    </script>
+</body>
+</html>
