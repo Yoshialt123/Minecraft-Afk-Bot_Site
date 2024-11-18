@@ -8,19 +8,17 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Serve static files like style.css from the root folder
+app.use(express.static(path.join(__dirname, '../')));
+
 // Serve index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));  // Accessing file from root folder
+    res.sendFile(path.join(__dirname, '../index.html'));  // Accessing index.html from the root folder
 });
 
 // Serve sessions.html
 app.get('/sessions', (req, res) => {
-    res.sendFile(path.join(__dirname, '../sessions.html'));  // Accessing file from root folder
-});
-
-// Serve style.css
-app.get('/styles.css', (req, res) => {
-    res.sendFile(path.join(__dirname, '../style.css'));  // Accessing file from root folder
+    res.sendFile(path.join(__dirname, '../sessions.html'));  // Accessing sessions.html from the root folder
 });
 
 // Start the server
