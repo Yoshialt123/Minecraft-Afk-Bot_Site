@@ -7,20 +7,18 @@ const PREFIX = '$'; // Prefix for bot commands
 function startBot(serverName, serverIP, serverPort, username, offline) {
     if (activeBots[serverName]) {
         console.log(`Bot for ${serverName} is already active.`);
-        return;
+        return { error: `Bot for ${serverName} is already active.` };
     }
 
-    // Add more detailed logs for debugging
-    console.log(`Starting bot for ${serverName} with IP: ${serverIP}, Port: ${serverPort}`);
+    console.log(`Starting bot for ${serverName}...`);
 
     const bot = bedrock.createClient({
         host: serverIP,
         port: serverPort,
         username: username || `Bot${Math.floor(Math.random() * 1000)}`,
-        offline: offline || false,  // Ensure we respect the offline option
+        offline: offline || false,
     });
 
-    // Store bot data
     activeBots[serverName] = {
         bot,
         serverIP,
@@ -30,7 +28,6 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
         connected: false,
     };
 
-    // Listen for connection events and log errors
     bot.on('join', () => {
         console.log(`Bot connected to ${serverName}`);
         activeBots[serverName].connected = true;
@@ -42,7 +39,7 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
     });
 
     bot.on('error', (error) => {
-        console.error(`Bot encountered an error on ${serverName}:`, error.message);
+        console.error(`Error on bot for ${serverName}:`, error.message);
     });
 
     bot.on('text', async (packet) => {
@@ -52,7 +49,7 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
             const command = packet.message.slice(PREFIX.length).trim();
 
             if (command.toLowerCase().startsWith('gpt ')) {
-                const userMessage = command.slice(4); // Remove "gpt " from the command
+                const userMessage = command.slice(4);
                 const reply = await chatWithGPT(userMessage);
 
                 bot.queue('text', {
@@ -76,7 +73,7 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
                 });
             }
         } catch (err) {
-            console.error('Error processing chat command:', err.message);
+            console.error('Error processing command:', err.message);
             bot.queue('text', {
                 type: 'chat',
                 needs_translation: false,
@@ -84,28 +81,24 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
                 xuid: '',
                 platform_chat_id: '',
                 filtered_message: '',
-                message: 'An error occurred while processing your command. Please try again.',
+                message: 'An error occurred. Try again later.',
             });
         }
     });
 
-    // Attempt connection and log errors
-    bot.on('connect', () => {
-        console.log(`Bot attempting to connect to ${serverIP}:${serverPort}...`);
-    });
-
-    bot.on('end', (error) => {
-        console.error('Connection ended with error:', error);
-    });
+    return { success: `Bot for ${serverName} started.` };
 }
 
 function stopBot(serverName) {
     const botData = activeBots[serverName];
-    if (botData) {
-        botData.bot.disconnect();
-        delete activeBots[serverName];
-        console.log(`Bot for ${serverName} stopped.`);
+    if (!botData) {
+        return { error: `No active bot for ${serverName}` };
     }
+
+    botData.bot.disconnect();
+    delete activeBots[serverName];
+    console.log(`Bot for ${serverName} stopped.`);
+    return { success: `Bot for ${serverName} stopped.` };
 }
 
 function getBotStatus() {
