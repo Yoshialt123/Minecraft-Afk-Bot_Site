@@ -1,5 +1,5 @@
 const express = import('express');
-const { startBot, stopBot, getBotStatus } = require('../bots/botManager');
+const { startBot, stopBot, getBotStatus } = import('../bots/botManager');
 
 const app = express();
 app.use(express.json());
