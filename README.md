@@ -1,7 +1,5 @@
 # Minecraft-Afk-Bot_Site
 
-```markdown
-
 A fully-featured Minecraft Bedrock AFK bot manager that allows you to create, manage, and customize bot behavior on servers. Includes a built-in ChatGPT integration for bot responses and command interaction.
 
 ---
