@@ -1,69 +1,68 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minecraft AFK Bot Manager</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header>
-    <h1>Minecraft AFK Bot Manager</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="sessions.html">Active Sessions</a>
-    </nav>
-  </header>
+const express = require('express');
+const { createClient } = require('bedrock-protocol');
+const fs = require('fs');
 
-  <main>
-    <h2>Start a Bot</h2>
-    <form id="start-bot-form">
-      <label>Server Name: <input type="text" name="serverName" required></label><br>
-      <label>Server IP: <input type="text" name="serverIP" required></label><br>
-      <label>Server Port: <input type="number" name="serverPort" required></label><br>
-      <label>Password: <input type="password" name="password" required></label><br>
-      <button type="submit">Start Bot</button>
-    </form>
+const app = express();
+const PORT = 3000;
 
-    <h2>Stop a Bot</h2>
-    <form id="stop-bot-form">
-      <label>Server Name: <input type="text" name="serverName" required></label><br>
-      <label>Password: <input type="password" name="password" required></label><br>
-      <button type="submit">Stop Bot</button>
-    </form>
-  </main>
+app.use(express.json());
+app.use(express.static('public'));
 
-  <script>
-    const startForm = document.getElementById('start-bot-form');
-    const stopForm = document.getElementById('stop-bot-form');
+const botConfig = JSON.parse(fs.readFileSync('./bot.json', 'utf8'));
+const activeBots = {};
 
-    startForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(startForm);
+app.post('/start-bot', (req, res) => {
+  const { serverName, serverIP, serverPort, password } = req.body;
+  const offlineMode = botConfig.offlineMode;
 
-      await fetch('/start-bot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.fromEntries(formData.entries()))
-      });
+  if (activeBots[serverName]) {
+    return res.status(400).json({ message: `Bot for server ${serverName} is already active.` });
+  }
 
-      alert('Bot started!');
-      startForm.reset();
-    });
+  const bot = createClient({
+    host: serverIP,
+    port: parseInt(serverPort),
+    username: `${botConfig.defaultUsernamePrefix}${Math.floor(Math.random() * 10000)}`,
+    offline: offlineMode
+  });
 
-    stopForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(stopForm);
+  bot.on('login', () => {
+    console.log(`Bot connected to server: ${serverName}`);
+  });
 
-      await fetch('/stop-bot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.fromEntries(formData.entries()))
-      });
+  bot.on('end', () => {
+    console.log(`Bot disconnected from server: ${serverName}`);
+  });
 
-      alert('Bot stopped!');
-      stopForm.reset();
-    });
-  </script>
-</body>
-</html>
+  bot.on('error', (err) => {
+    console.error(err);
+  });
+
+  activeBots[serverName] = { bot, serverIP, serverPort, connected: true };
+  res.json({ message: `Bot started for server: ${serverName}` });
+});
+
+app.post('/stop-bot', (req, res) => {
+  const { serverName } = req.body;
+
+  if (!activeBots[serverName]) {
+    return res.status(400).json({ message: `No active bot for server: ${serverName}` });
+  }
+
+  activeBots[serverName].bot.end();
+  delete activeBots[serverName];
+  res.json({ message: `Bot stopped for server: ${serverName}` });
+});
+
+app.get('/status', (req, res) => {
+  const status = Object.entries(activeBots).map(([serverName, botData]) => ({
+    serverName,
+    serverIP: botData.serverIP,
+    serverPort: botData.serverPort,
+    connected: botData.bot.isConnected
+  }));
+
+  res.json(status);
+});
+
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
