@@ -1,8 +1,9 @@
 {
-  "name": "minecraft-afk-bot",
-  "version": "1.7.8",
-  "description": "A Minecraft Bedrock AFK bot manager with ChatGPT interaction.",
+  "name": "minecraft-bot-manager",
+  "version": "1.0.0",
+  "description": "A bot manager for Minecraft Bedrock using bedrock-protocol and OpenAI GPT integration.",
   "main": "server/index.js",
+  "type": "module",
   "scripts": {
     "start": "node server/index.js"
   },
@@ -11,13 +12,9 @@
     "express": "^4.18.2",
     "node-fetch": "^3.3.2"
   },
-  "keywords": [
-    "minecraft",
-    "bedrock",
-    "afk-bot",
-    "manager",
-    "chatgpt"
-  ],
+  "engines": {
+    "node": ">=16"
+  },
   "author": "Yosh Alterado",
   "license": "MIT"
 }
