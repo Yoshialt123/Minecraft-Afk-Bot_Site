@@ -1,10 +1,10 @@
-const bedrock = require('bedrock-protocol');
-const { chatWithGPT } = import('./scripts/chatgpt');
+import bedrock from 'bedrock-protocol';
+import { chatWithGPT } from './scripts/chatgpt.js';
 
 const activeBots = {};
 const PREFIX = '$'; // Prefix for bot commands
 
-function startBot(serverName, serverIP, serverPort, username, offline) {
+export function startBot(serverName, serverIP, serverPort, username, offline) {
     if (activeBots[serverName]) {
         console.log(`Bot for ${serverName} is already active.`);
         return;
@@ -14,7 +14,7 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
         host: serverIP,
         port: serverPort,
         username: username || `Bot${Math.floor(Math.random() * 1000)}`,
-        offline: true,
+        offline: true, // Always offline mode for cracked servers
     });
 
     activeBots[serverName] = {
@@ -85,7 +85,7 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
     });
 }
 
-function stopBot(serverName) {
+export function stopBot(serverName) {
     const botData = activeBots[serverName];
     if (botData) {
         botData.bot.disconnect();
@@ -94,11 +94,9 @@ function stopBot(serverName) {
     }
 }
 
-function getBotStatus() {
+export function getBotStatus() {
     return Object.keys(activeBots).map((serverName) => ({
         serverName,
         connected: activeBots[serverName].connected,
     }));
 }
-
-module.exports = { startBot, stopBot, getBotStatus };
