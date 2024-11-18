@@ -1,21 +1,26 @@
 import express from 'express';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get the __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Serve the index.html file when accessing the root
+// Serve index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, '../index.html'));  // Accessing file from root folder
 });
 
-// Serve the sessions.html file for /sessions route
+// Serve sessions.html
 app.get('/sessions', (req, res) => {
-    res.sendFile(path.join(__dirname, 'sessions.html'));
+    res.sendFile(path.join(__dirname, '../sessions.html'));  // Accessing file from root folder
 });
 
-// Serve the CSS file for the style
+// Serve style.css
 app.get('/styles.css', (req, res) => {
-    res.sendFile(path.join(__dirname, 'style.css'));
+    res.sendFile(path.join(__dirname, '../style.css'));  // Accessing file from root folder
 });
 
 // Start the server
