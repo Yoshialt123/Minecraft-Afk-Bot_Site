@@ -1,40 +1,77 @@
 const bedrock = require('bedrock-protocol');
-const { fetchChatGPTResponse } = require('./scripts/chatgpt');
+const { chatWithGPT } = require('./scripts/chatgpt');
 
-const bots = {};
+const activeBots = {};
+const PREFIX = '$'; // Prefix for bot commands
 
 function startBot(serverName, serverIP, serverPort, username, offline) {
-    if (bots[serverName]) {
-        console.log(`Bot for server ${serverName} is already running.`);
+    if (activeBots[serverName]) {
+        console.log(`Bot for ${serverName} is already active.`);
         return;
     }
 
     const bot = bedrock.createClient({
         host: serverIP,
-        port: parseInt(serverPort),
+        port: serverPort,
         username: username || `Bot${Math.floor(Math.random() * 1000)}`,
+        offline: offline,
+    });
+
+    activeBots[serverName] = {
+        bot,
+        serverIP,
+        serverPort,
+        username,
         offline,
+        connected: false,
+    };
+
+    bot.on('join', () => {
+        console.log(`Bot connected to ${serverName}`);
+        activeBots[serverName].connected = true;
     });
 
-    bot.on('connect', () => {
-        console.log(`${username} connected to ${serverName}`);
-        bots[serverName].connected = true;
+    bot.on('disconnect', (reason) => {
+        console.error(`Bot disconnected from ${serverName}:`, reason);
+        activeBots[serverName].connected = false;
     });
 
-    bot.on('disconnect', () => {
-        console.log(`${username} disconnected from ${serverName}`);
-        bots[serverName].connected = false;
+    bot.on('error', (error) => {
+        console.error(`Bot encountered an error on ${serverName}:`, error.message);
     });
 
     bot.on('text', async (packet) => {
-        const message = packet.message.trim();
+        try {
+            if (!packet.message.startsWith(PREFIX)) return;
 
-        if (message.startsWith('$')) {
-            const query = message.slice(1).trim();
-            console.log(`Received command: ${query}`);
+            const command = packet.message.slice(PREFIX.length).trim();
 
-            // Fetch response from ChatGPT API
-            const reply = await fetchChatGPTResponse(query);
+            if (command.toLowerCase().startsWith('gpt ')) {
+                const userMessage = command.slice(4); // Remove "gpt " from the command
+                const reply = await chatWithGPT(userMessage);
+
+                bot.queue('text', {
+                    type: 'chat',
+                    needs_translation: false,
+                    source_name: bot.options.username,
+                    xuid: '',
+                    platform_chat_id: '',
+                    filtered_message: '',
+                    message: reply,
+                });
+            } else {
+                bot.queue('text', {
+                    type: 'chat',
+                    needs_translation: false,
+                    source_name: bot.options.username,
+                    xuid: '',
+                    platform_chat_id: '',
+                    filtered_message: '',
+                    message: `Unknown command: ${command}`,
+                });
+            }
+        } catch (err) {
+            console.error('Error processing chat command:', err.message);
             bot.queue('text', {
                 type: 'chat',
                 needs_translation: false,
@@ -42,29 +79,25 @@ function startBot(serverName, serverIP, serverPort, username, offline) {
                 xuid: '',
                 platform_chat_id: '',
                 filtered_message: '',
-                message: `${packet.source_name}, ChatGPT says: ${reply}`,
+                message: 'An error occurred while processing your command. Please try again.',
             });
         }
     });
-
-    bots[serverName] = { serverIP, serverPort, username, bot, connected: false };
 }
 
 function stopBot(serverName) {
-    if (bots[serverName]) {
-        bots[serverName].bot.end();
-        delete bots[serverName];
-        console.log(`Bot for server ${serverName} stopped.`);
+    const botData = activeBots[serverName];
+    if (botData) {
+        botData.bot.disconnect();
+        delete activeBots[serverName];
+        console.log(`Bot for ${serverName} stopped.`);
     }
 }
 
 function getBotStatus() {
-    return Object.entries(bots).map(([serverName, bot]) => ({
+    return Object.keys(activeBots).map((serverName) => ({
         serverName,
-        serverIP: bot.serverIP,
-        serverPort: bot.serverPort,
-        username: bot.username,
-        connected: bot.connected,
+        connected: activeBots[serverName].connected,
     }));
 }
 
