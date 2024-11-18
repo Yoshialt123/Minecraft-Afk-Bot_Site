@@ -1,5 +1,5 @@
 const bedrock = require('bedrock-protocol');
-const { chatWithGPT } = require('./scripts/chatgpt');
+const { chatWithGPT } = import('./scripts/chatgpt');
 
 const activeBots = {};
 const PREFIX = '$'; // Prefix for bot commands
