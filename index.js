@@ -20,7 +20,7 @@ function createBot(serverName, serverIP, serverPort, password) {
         port: serverPort,
         username: `AFK_Bot_${Math.floor(Math.random() * 1000)}`, // Random username for cracked servers
         version: false,
-        offline: true, // Set to true for cracked servers
+        online: false, // Set to true for cracked servers
     });
 
     bots[serverName] = bot;
