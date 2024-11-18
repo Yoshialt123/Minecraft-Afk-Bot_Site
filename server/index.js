@@ -1,4 +1,4 @@
-const express = require('express');
+const express = import('express');
 const { startBot, stopBot, getBotStatus } = require('../bots/botManager');
 
 const app = express();
