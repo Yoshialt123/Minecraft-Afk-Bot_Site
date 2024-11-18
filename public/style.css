@@ -1,103 +1,68 @@
-/* General Page Styling */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
-    color: #333;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+  color: #333;
 }
 
 header {
-    background-color: #0078D7;
-    padding: 1em;
-    text-align: center;
-    color: white;
-}
-
-header h1 {
-    margin: 0;
-    font-size: 1.8em;
-}
-
-/* Navigation Menu */
-nav {
-    background-color: #005bb5;
-    overflow: hidden;
+  background-color: #4CAF50;
+  color: white;
+  padding: 1rem;
+  text-align: center;
 }
 
 nav a {
-    float: left;
-    display: block;
-    color: white;
-    text-align: center;
-    padding: 14px 16px;
-    text-decoration: none;
-    font-weight: bold;
+  color: white;
+  margin: 0 10px;
+  text-decoration: none;
 }
 
 nav a:hover {
-    background-color: #004080;
+  text-decoration: underline;
 }
 
-/* Main Content Styling */
 main {
-    padding: 2em;
-}
-
-h2 {
-    color: #005bb5;
+  padding: 2rem;
 }
 
 form {
-    margin-bottom: 2em;
-    padding: 1em;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
 }
 
 form label {
-    display: block;
-    margin: 0.5em 0;
+  display: block;
+  margin: 0.5rem 0;
 }
 
-form input {
-    width: 100%;
-    padding: 0.5em;
-    margin: 0.5em 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
 }
 
-form button {
-    background-color: #0078D7;
-    color: white;
-    border: none;
-    padding: 0.7em 1.2em;
-    border-radius: 5px;
-    cursor: pointer;
+button:hover {
+  background-color: #45a049;
 }
 
-form button:hover {
-    background-color: #005bb5;
-}
-
-/* Table Styling */
 table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1em;
-    background-color: white;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
 }
 
-table th, table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
+table, th, td {
+  border: 1px solid #ddd;
 }
 
-table th {
-    background-color: #0078D7;
-    color: white;
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+
+th {
+  background-color: #f2f2f2;
 }
