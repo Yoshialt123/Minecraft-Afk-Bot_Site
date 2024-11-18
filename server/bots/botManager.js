@@ -4,19 +4,23 @@ import { chatWithGPT } from './scripts/chatgpt.js';
 const activeBots = {};
 const PREFIX = '$'; // Prefix for bot commands
 
-export function startBot(serverName, serverIP, serverPort, username, offline) {
+function startBot(serverName, serverIP, serverPort, username, offline) {
     if (activeBots[serverName]) {
         console.log(`Bot for ${serverName} is already active.`);
         return;
     }
 
+    // Add more detailed logs for debugging
+    console.log(`Starting bot for ${serverName} with IP: ${serverIP}, Port: ${serverPort}`);
+
     const bot = bedrock.createClient({
         host: serverIP,
         port: serverPort,
         username: username || `Bot${Math.floor(Math.random() * 1000)}`,
-        offline: true, // Always offline mode for cracked servers
+        offline: offline || false,  // Ensure we respect the offline option
     });
 
+    // Store bot data
     activeBots[serverName] = {
         bot,
         serverIP,
@@ -26,6 +30,7 @@ export function startBot(serverName, serverIP, serverPort, username, offline) {
         connected: false,
     };
 
+    // Listen for connection events and log errors
     bot.on('join', () => {
         console.log(`Bot connected to ${serverName}`);
         activeBots[serverName].connected = true;
@@ -83,9 +88,18 @@ export function startBot(serverName, serverIP, serverPort, username, offline) {
             });
         }
     });
+
+    // Attempt connection and log errors
+    bot.on('connect', () => {
+        console.log(`Bot attempting to connect to ${serverIP}:${serverPort}...`);
+    });
+
+    bot.on('end', (error) => {
+        console.error('Connection ended with error:', error);
+    });
 }
 
-export function stopBot(serverName) {
+function stopBot(serverName) {
     const botData = activeBots[serverName];
     if (botData) {
         botData.bot.disconnect();
@@ -94,9 +108,11 @@ export function stopBot(serverName) {
     }
 }
 
-export function getBotStatus() {
+function getBotStatus() {
     return Object.keys(activeBots).map((serverName) => ({
         serverName,
         connected: activeBots[serverName].connected,
     }));
 }
+
+export { startBot, stopBot, getBotStatus };
