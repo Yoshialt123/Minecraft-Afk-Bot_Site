@@ -1,5 +1,5 @@
 import express from 'express';
-import { startBot, stopBot, getBotStatus } from './botManager.js';
+import { startBot, stopBot, getBotStatus } from './bots/botManager.js';
 import path from 'path';
 
 const app = express();
