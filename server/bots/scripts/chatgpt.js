@@ -1,33 +1,35 @@
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+import fetch from 'node-fetch'; // Ensure this is installed and imported
 
-const OPENAI_API_KEY = 'your-chatgpt-api-key'; // Replace with your actual API key
+const API_KEY = '<your_openai_api_key>'; // Replace with your OpenAI API key
+const API_URL = 'https://api.openai.com/v1/chat/completions';
 
-async function chatWithGPT(message) {
+/**
+ * Function to send a message to OpenAI's ChatGPT and get a reply.
+ * @param {string} userMessage - The user's message.
+ * @returns {Promise<string>} - The response from ChatGPT.
+ */
+export async function chatWithGPT(userMessage) {
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${OPENAI_API_KEY}`,
+                Authorization: `Bearer ${API_KEY}`,
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [{ role: 'user', content: message }],
-                max_tokens: 150,
+                model: 'gpt-3.5-turbo', // Specify the GPT model
+                messages: [{ role: 'user', content: userMessage }],
             }),
         });
 
         if (!response.ok) {
-            console.error(`OpenAI API Error: ${response.status} ${response.statusText}`);
-            return 'Sorry, I couldn\'t process your request right now. Please try again later.';
+            throw new Error(`OpenAI API error: ${response.statusText}`);
         }
 
         const data = await response.json();
-        return data.choices[0]?.message?.content || 'I didn\'t understand that. Can you rephrase?';
+        return data.choices[0].message.content.trim();
     } catch (error) {
-        console.error('Error communicating with OpenAI API:', error);
-        return 'An error occurred while trying to communicate with the AI. Please try again later.';
+        console.error('Error in chatWithGPT:', error.message);
+        return 'Sorry, I could not process your request. Please try again later.';
     }
 }
-
-module.exports = { chatWithGPT };
