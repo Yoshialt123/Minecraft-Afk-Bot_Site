@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const { createClient } = require('minecraft-protocol');
+const { createClient } = require('bedrock-protocol');
 const app = express();
 
 const PORT = 3000;
