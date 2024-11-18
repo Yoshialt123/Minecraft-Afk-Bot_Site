@@ -23,7 +23,7 @@ app.post('/start-bot', (req, res) => {
     host: serverIP,
     port: parseInt(serverPort),
     username: `${botConfig.defaultUsernamePrefix}${Math.floor(Math.random() * 10000)}`,
-    offline: offlineMode
+    offline: true
   });
 
   bot.on('login', () => {
