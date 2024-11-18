@@ -1,27 +1,24 @@
 import express from 'express';
-import { startBot, stopBot, getBotStatus } from './bots/botManager.js';
+import path from 'path';
 
 const app = express();
-app.use(express.json());
 
-// Start a bot
-app.post('/start-bot', (req, res) => {
-    const { serverName, serverIP, serverPort, username, password, offline } = req.body;
-    startBot(serverName, serverIP, serverPort, username, password, offline === 'on');
-    res.status(200).send('Bot started!');
+// Serve the index.html file when accessing the root
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Stop a bot
-app.post('/stop-bot', (req, res) => {
-    const { serverName } = req.body;
-    stopBot(serverName);
-    res.status(200).send('Bot stopped!');
+// Serve the sessions.html file for /sessions route
+app.get('/sessions', (req, res) => {
+    res.sendFile(path.join(__dirname, 'sessions.html'));
 });
 
-// Get bot status
-app.get('/status', (req, res) => {
-    res.json(getBotStatus());
+// Serve the CSS file for the style
+app.get('/styles.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'style.css'));
 });
 
-// Server listener
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+// Start the server
+app.listen(3000, () => {
+    console.log('Server running on http://localhost:3000');
+});
