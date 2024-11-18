@@ -1,95 +1,132 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const { createClient } = require('bedrock-protocol');
+const express = require("express");
+const bodyParser = require("body-parser");
+const bedrock = require("bedrock-protocol");
+const fs = require("fs");
+
 const app = express();
+const port = 3000;
 
-const PORT = 3000;
-
-// Middleware
 app.use(bodyParser.json());
-app.use(express.static('public'));
+app.use(express.static("public"));
 
-// Data store
-const bots = {}; // Tracks active bots with server name as the key
-const botPasswords = {}; // Stores passwords for user control of bots
+const activeBots = {}; // Track bot sessions
 
-// Create a bot
-function createBot(serverName, serverIP, serverPort, password) {
-    const bot = createClient({
-        host: serverIP,
-        port: serverPort,
-        username: `AFK_Bot_${Math.floor(Math.random() * 1000)}`, // Random username for cracked servers
-        version: false,
-        online: false, // Set to true for cracked servers
-    });
+// Helper to save bot state to bots.json
+function saveBots() {
+  fs.writeFileSync("./bots/bots.json", JSON.stringify(activeBots, null, 2));
+}
 
-    bots[serverName] = bot;
-    botPasswords[serverName] = password;
+// Load bots from file on server start
+function loadBots() {
+  if (fs.existsSync("./bots/bots.json")) {
+    const loadedBots = JSON.parse(fs.readFileSync("./bots/bots.json", "utf-8"));
 
-    bot.on('end', () => {
-        console.log(`Bot disconnected from ${serverName}. Reconnecting in 5 seconds...`);
-        setTimeout(() => createBot(serverName, serverIP, serverPort, password), 5000); // Reconnect
-    });
+    // Restore bot connections
+    for (const [serverName, botData] of Object.entries(loadedBots)) {
+      createAndTrackBot(serverName, botData.serverIP, botData.serverPort, botData.password, botData.offlineMode);
+    }
+  }
+}
 
-    bot.on('error', (err) => {
-        console.error(`Error in bot for ${serverName}:`, err.message);
-    });
+// Create and manage a bot connection
+function createAndTrackBot(serverName, serverIP, serverPort, password, offlineMode = true) {
+  console.log(`Starting bot for ${serverName} at ${serverIP}:${serverPort}`);
 
+  const bot = bedrock.createClient({
+    host: serverIP,
+    port: parseInt(serverPort),
+    username: "AFK_Bot", // Customize as needed
+    offline: true, // Enable offline mode for cracked servers
+  });
+
+  activeBots[serverName] = {
+    bot,
+    serverIP,
+    serverPort,
+    password,
+    offlineMode,
+    connected: false,
+  };
+
+  // Bot event listeners
+  bot.on("spawn", () => {
     console.log(`Bot connected to ${serverName}`);
+    activeBots[serverName].connected = true;
+    saveBots();
+  });
+
+  bot.on("end", () => {
+    console.log(`Bot disconnected from ${serverName}`);
+    activeBots[serverName].connected = false;
+
+    // Automatically reconnect the bot
+    setTimeout(() => {
+      if (!activeBots[serverName]) return; // Bot manually stopped
+      console.log(`Reconnecting bot for ${serverName}`);
+      createAndTrackBot(serverName, serverIP, serverPort, password, offlineMode);
+    }, 5000); // Reconnect after 5 seconds
+    saveBots();
+  });
+
+  bot.on("error", (err) => {
+    console.error(`Error for bot on ${serverName}:`, err);
+    activeBots[serverName].connected = false;
+    saveBots();
+  });
+
+  return bot;
 }
 
 // Start a bot
-app.post('/start-bot', (req, res) => {
-    const { serverName, serverIP, serverPort, password } = req.body;
+app.post("/start-bot", (req, res) => {
+  const { serverName, serverIP, serverPort, password, offlineMode } = req.body;
 
-    if (!serverName || !serverIP || !serverPort || !password) {
-        return res.status(400).json({ error: 'All fields are required!' });
-    }
+  if (activeBots[serverName]) {
+    return res.status(400).json({ error: "Bot is already active for this server." });
+  }
 
-    if (bots[serverName]) {
-        return res.status(400).json({ error: 'A bot is already running for this server!' });
-    }
-
-    createBot(serverName, serverIP, parseInt(serverPort), password);
-    res.json({ message: `Bot started for server ${serverName}` });
+  createAndTrackBot(serverName, serverIP, serverPort, password, offlineMode === "true");
+  res.json({ message: "Bot started successfully." });
 });
 
 // Stop a bot
-app.post('/stop-bot', (req, res) => {
-    const { serverName, password } = req.body;
+app.post("/stop-bot", (req, res) => {
+  const { serverName, password } = req.body;
 
-    if (!serverName || !password) {
-        return res.status(400).json({ error: 'Server name and password are required!' });
-    }
+  if (!activeBots[serverName]) {
+    return res.status(404).json({ error: "Bot not found for this server." });
+  }
 
-    const bot = bots[serverName];
-    const storedPassword = botPasswords[serverName];
+  if (activeBots[serverName].password !== password) {
+    return res.status(403).json({ error: "Incorrect password." });
+  }
 
-    if (!bot) {
-        return res.status(404).json({ error: 'No bot found for this server!' });
-    }
+  activeBots[serverName].bot.end();
+  delete activeBots[serverName];
+  saveBots();
 
-    if (storedPassword !== password) {
-        return res.status(403).json({ error: 'Invalid password!' });
-    }
-
-    bot.end('Bot stopped by user.');
-    delete bots[serverName];
-    delete botPasswords[serverName];
-    res.json({ message: `Bot stopped for server ${serverName}` });
+  res.json({ message: "Bot stopped successfully." });
 });
 
-// Get bot status
-app.get('/status', (req, res) => {
-    const status = Object.keys(bots).map((serverName) => ({
-        serverName,
-        connected: bots[serverName] && !bots[serverName].ended,
-    }));
-
-    res.json(status);
+// Get active bot statuses
+app.get("/status", (req, res) => {
+  const botStatus = Object.entries(activeBots).map(([serverName, botData]) => ({
+    serverName,
+    connected: botData.connected,
+  }));
+  res.json(botStatus);
 });
+
+// Ensure bots directory exists
+if (!fs.existsSync("./bots")) {
+  fs.mkdirSync("./bots");
+}
+
+// Load saved bots on server start
+loadBots();
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+  console.log("==> Your service is live 🎉");
 });
