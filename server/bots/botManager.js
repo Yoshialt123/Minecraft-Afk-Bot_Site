@@ -4,7 +4,7 @@ import { Vec3 } from 'vec3';
 
 const openai = new OpenAIApi(
   new Configuration({
-    apiKey: '<your-api-key-here>', // Replace with your OpenAI API key
+    apiKey: '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', // Replace with your OpenAI API key
   })
 );
 
