@@ -1,36 +1,33 @@
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-const CHATGPT_API_KEY = 'your-api-key-here'; // Replace with your OpenAI API key
+const OPENAI_API_KEY = 'your-chatgpt-api-key'; // Replace with your actual API key
 
-/**
- * Fetch response from ChatGPT API for a given query.
- * @param {string} query - The user query.
- * @returns {Promise<string>} - The response from ChatGPT.
- */
-async function fetchChatGPTResponse(query) {
+async function chatWithGPT(message) {
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${CHATGPT_API_KEY}`,
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
             },
             body: JSON.stringify({
                 model: 'gpt-3.5-turbo',
-                messages: [{ role: 'user', content: query }],
+                messages: [{ role: 'user', content: message }],
+                max_tokens: 150,
             }),
         });
 
         if (!response.ok) {
-            throw new Error(`ChatGPT API error: ${response.statusText}`);
+            console.error(`OpenAI API Error: ${response.status} ${response.statusText}`);
+            return 'Sorry, I couldn\'t process your request right now. Please try again later.';
         }
 
         const data = await response.json();
-        return data.choices[0].message.content.trim();
+        return data.choices[0]?.message?.content || 'I didn\'t understand that. Can you rephrase?';
     } catch (error) {
-        console.error('Error fetching ChatGPT response:', error.message);
-        return 'Sorry, I encountered an error while processing your request.';
+        console.error('Error communicating with OpenAI API:', error);
+        return 'An error occurred while trying to communicate with the AI. Please try again later.';
     }
 }
 
-module.exports = { fetchChatGPTResponse };
+module.exports = { chatWithGPT };
