@@ -1,27 +1,36 @@
 import express from 'express';
+import { startBot, stopBot, getBotStatus } from './botManager.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Get the __dirname equivalent in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
+const PORT = 3000;
 
-// Serve static files like style.css from the root folder
-app.use(express.static(path.join(__dirname, '../')));
+// Middleware for parsing JSON
+app.use(express.json());
 
-// Serve index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../index.html'));  // Accessing index.html from the root folder
+// Serve static files (index.html, style.css, sessions.html)
+const __dirname = path.resolve();
+app.use(express.static(__dirname));
+
+// API routes for bot management
+app.post('/start-bot', (req, res) => {
+    const { serverName, serverIP, serverPort, username, offline } = req.body;
+    const result = startBot(serverName, serverIP, parseInt(serverPort), username, offline);
+    res.json(result);
 });
 
-// Serve sessions.html
-app.get('/sessions', (req, res) => {
-    res.sendFile(path.join(__dirname, '../sessions.html'));  // Accessing sessions.html from the root folder
+app.post('/stop-bot', (req, res) => {
+    const { serverName } = req.body;
+    const result = stopBot(serverName);
+    res.json(result);
+});
+
+app.get('/bot-status', (req, res) => {
+    const status = getBotStatus();
+    res.json(status);
 });
 
 // Start the server
-app.listen(3000, () => {
-    console.log('Server running on http://localhost:3000');
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
 });
