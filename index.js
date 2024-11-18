@@ -21,7 +21,7 @@ app.post('/start-bot', (req, res) => {
   const bot = createClient({
     host: serverIP,
     port: parseInt(serverPort),
-    offline: offlineMode, // This enables cracked mode
+    offline: true, // This enables cracked mode
     username: `${botConfig.defaultUsernamePrefix}${Math.floor(Math.random() * 10000)}`,
   });
 
