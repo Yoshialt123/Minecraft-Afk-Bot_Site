@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'; // Ensure this is installed and imported
 
-const API_KEY = '<your_openai_api_key>'; // Replace with your OpenAI API key
+const API_KEY = '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'; // Replace with your OpenAI API key
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 
 /**
