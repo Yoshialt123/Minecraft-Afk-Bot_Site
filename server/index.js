@@ -1,5 +1,5 @@
 import express from 'express';
-import { startBot, stopBot, getBotStatus } from './bots/botManager.js'; // Add .js for ES Modules
+import { startBot, stopBot, getBotStatus } from './bots/botManager.js';
 
 const app = express();
 app.use(express.json());
