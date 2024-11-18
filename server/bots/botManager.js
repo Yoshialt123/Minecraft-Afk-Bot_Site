@@ -20,7 +20,7 @@ export function startBot(serverName, serverIP, serverPort, username, offline) {
     host: serverIP,
     port: serverPort,
     username: username || `Bot${Math.floor(Math.random() * 1000)}`,
-    offline: offline,
+    offline: true,
   });
 
   activeBots[serverName] = bot;
