@@ -1,5 +1,5 @@
-const express = import('express');
-const { startBot, stopBot, getBotStatus } = import('../bots/botManager');
+import express from 'express';
+import { startBot, stopBot, getBotStatus } from './bots/botManager.js'; // Add .js for ES Modules
 
 const app = express();
 app.use(express.json());
@@ -7,7 +7,7 @@ app.use(express.json());
 // Start a bot
 app.post('/start-bot', (req, res) => {
     const { serverName, serverIP, serverPort, username, password, offline } = req.body;
-    startBot(serverName, serverIP, serverPort, username, offline === 'on');
+    startBot(serverName, serverIP, serverPort, username, password, offline === 'on');
     res.status(200).send('Bot started!');
 });
 
@@ -18,9 +18,10 @@ app.post('/stop-bot', (req, res) => {
     res.status(200).send('Bot stopped!');
 });
 
-// Get bot statuses
+// Get bot status
 app.get('/status', (req, res) => {
     res.json(getBotStatus());
 });
 
+// Server listener
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
